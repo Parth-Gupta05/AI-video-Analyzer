@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Unified Hazard Reporting</title>
+  <style>
+    :root {
+      --bg:#0b0b0d;
+      --panel:#0f1720;
+      --accent:#00d1b2;
+      --danger:#ff4d4f;
+      --muted:#9aa4b2;
+      --glass: rgba(255,255,255,0.03);
+      --radius:14px;
+      --gap:12px;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: linear-gradient(180deg, #03060a 0%, #07111a 100%);
+      color: #e6eef6;
+    }
+
+    .app {
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+
+    .card {
+      width: min(1180px, 98vw);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+      backdrop-filter: blur(6px);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      background: var(--panel);
+    }
+
+    .brand {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), #4dd0ff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: #021018;
+    }
+
+    .title {
+      font-weight: 600;
+    }
+
+    .subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 10px;
+      padding: 0 18px;
+      background: var(--panel);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .nav-tab {
+      padding: 14px 0;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .nav-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    .content {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 16px;
+      padding: 18px;
+    }
+
+    .visual-wrap {
+      position: relative;
+      background: var(--glass);
+      border-radius: 10px;
+      overflow: hidden;
+      min-height: 56vh;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .preview {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background: #000;
+      display: block;
+    }
+
+    .visual-toolbar {
+      position: absolute;
+      left: 12px;
+      bottom: 12px;
+      display: flex;
+      gap: 10px;
+      z-index: 5;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .panel {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.01), transparent);
+      padding: 14px;
+      border-radius: 10px;
+      min-height: 56vh;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      appearance: none;
+      border: 0;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #021018;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: #120606;
+    }
+
+    .small {
+      font-size: 13px;
+      padding: 8px 10px;
+    }
+
+    .info {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .log {
+      flex: 1;
+      overflow: auto;
+      padding: 8px;
+      background: rgba(255, 255, 255, 0.01);
+      border-radius: 8px;
+      border: 1px dashed rgba(255, 255, 255, 0.02);
+      font-family: monospace;
+      font-size: 13px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    input[type="text"],
+    input[type="tel"],
+    textarea {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      padding: 10px;
+      border-radius: 8px;
+      color: #e6eef6;
+      font-size: 14px;
+    }
+
+    textarea {
+      min-height: 100px;
+    }
+
+    .footer {
+      padding: 12px 18px;
+      background: rgba(0, 0, 0, 0.04);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    @media (max-width: 980px) {
+      .content {
+        grid-template-columns: 1fr;
+      }
+      .panel {
+        min-height: 240px;
+      }
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      background: #06121a;
+      color: #e6f7f3;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="card">
+      <div class="header">
+        <div class="brand">
+          <div class="logo">HA</div>
+          <div>
+            <div class="title">Unified Hazard Reporter</div>
+            <div class="subtitle">Real-time detection and manual reporting</div>
+          </div>
+        </div>
+        <div class="info">Endpoint: <strong id="endpoint">https://model-forge-idfe.onrender.com/api/report</strong></div>
+      </div>
+
+      <div class="nav-tabs">
+        <div class="nav-tab active" data-tab="image-analyzer">Image Analyzer</div>
+        <div class="nav-tab" data-tab="live-stream">Live Stream</div>
+      </div>
+
+      <div id="image-analyzer" class="content">
+        <div class="visual-wrap">
+          <img id="previewImg" class="preview" alt="Image preview" />
+          <div class="visual-toolbar">
+            <label class="pill btn-ghost">
+              <input id="cameraInput" type="file" accept="image/*" capture="environment" class="hidden" />
+              📷 Photo
+            </label>
+            <label class="pill btn-ghost">
+              <input id="fileInput" type="file" accept="image/*" class="hidden" />
+              ⬆️ Upload
+            </label>
+            <button id="clearImage" class="pill" style="background:rgba(255,255,255,0.02)">🗑️ Clear</button>
+          </div>
+        </div>
+
+        <aside class="panel">
+          <div class="field">
+            <label class="info">Title*</label>
+            <input id="title" type="text" placeholder="Short title" />
+          </div>
+          <div class="field">
+            <label class="info">Description*</label>
+            <textarea id="desc" placeholder="Describe the issue"></textarea>
+          </div>
+          <div class="field">
+            <label class="info">Phone*</label>
+            <input id="phone" type="tel" placeholder="Contact number" />
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;justify-content:space-between">
+            <div class="info" id="locText">📍 Locating...</div>
+            <div style="display:flex;gap:8px">
+              <button id="analyzeButton" class="btn-primary small">Analyze</button>
+              <button id="submitButton" class="btn-primary small">Submit</button>
+            </div>
+          </div>
+          <div class="info">Logs</div>
+          <div id="log-image-analyzer" class="log">Ready.</div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button id="downloadBtn" class="btn-ghost small">Download</button>
+            <button id="sendBtn" class="btn-ghost small">Send Now</button>
+            <button id="clearLog-image" class="btn-ghost small">Clear Log</button>
+          </div>
+        </aside>
+      </div>
+
+      <div id="live-stream" class="content" style="display: none;">
+        <div class="video-wrap">
+          <video id="video" autoplay playsinline muted></video>
+          <div class="overlay">
+            <div class="pill">
+              <div id="recDot" class="status-dot"></div>
+              <div id="recLabel">Not recording</div>
+            </div>
+            <div class="pill" id="hazardBadge" style="display:none;background:rgba(255,77,79,0.16);color:#ffbcbc;border:1px solid rgba(255,77,79,0.15)">
+              ⚠️ <span id="hazardText" style="margin-left:8px">Hazard detected</span>
+            </div>
+          </div>
+        </div>
+
+        <aside class="panel">
+          <div>
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div class="info">Camera: <strong id="cameraLabel">—</strong></div>
+              <div class="info">Clip: <strong id="clipDuration">3s</strong></div>
+            </div>
+            <div class="controls" style="margin-top:10px">
+              <button id="recordButton" class="btn-primary">Start</button>
+              <button id="switchButton" class="btn-ghost small">Switch Camera</button>
+              <button id="muteButton" class="btn-ghost small">Mute</button>
+              <button id="downloadButton" class="btn-ghost small">Download Last</button>
+              <button id="sendButton-stream" class="btn-ghost small">Send Now</button>
+              <button id="clearLog-stream" class="btn-ghost small">Clear Log</button>
+            </div>
+          </div>
+          <div class="info">Upload endpoint: <code id="endpoint-stream">https://model-forge-idfe.onrender.com/api/detect</code></div>
+          <div class="log" id="log-stream" role="log" aria-live="polite">Ready.</div>
+        </aside>
+      </div>
+
+      <div class="footer">
+        <div class="info">Edge-first upload & reporting.</div>
+        <div class="info">Built: Compact stream + chunked uploads</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // --- Shared UI Elements ---
+      const toastEl = document.getElementById('toast');
+      const tabs = document.querySelectorAll('.nav-tab');
+      const pages = {
+        'image-analyzer': document.getElementById('image-analyzer'),
+        'live-stream': document.getElementById('live-stream')
+      };
+
+      function showToast(msg, ms = 3000) {
+        toastEl.textContent = msg;
+        toastEl.style.display = 'block';
+        setTimeout(() => toastEl.style.display = 'none', ms);
+      }
+
+      function switchTab(tabId) {
+        Object.keys(pages).forEach(key => {
+          pages[key].style.display = (key === tabId) ? 'grid' : 'none';
+        });
+
+        tabs.forEach(tab => {
+          tab.classList.toggle('active', tab.dataset.tab === tabId);
+        });
+      }
+
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+      });
+
+      // --- Image Analyzer Logic ---
+      const previewImg = document.getElementById('previewImg');
+      const cameraInput = document.getElementById('cameraInput');
+      const fileInput = document.getElementById('fileInput');
+      const clearImage = document.getElementById('clearImage');
+      const titleEl = document.getElementById('title');
+      const descEl = document.getElementById('desc');
+      const phoneEl = document.getElementById('phone');
+      const analyzeButton = document.getElementById('analyzeButton');
+      const submitButton = document.getElementById('submitButton');
+      const downloadBtn = document.getElementById('downloadBtn');
+      const sendBtn = document.getElementById('sendBtn');
+      const logElImage = document.getElementById('log-image-analyzer');
+      const locText = document.getElementById('locText');
+      const clearLogBtnImage = document.getElementById('clearLog-image');
+      const endpointImage = document.getElementById('endpoint').textContent.trim();
+
+      let base64 = null;
+      let coords = null;
+
+      function logImage(msg) {
+        const time = new Date().toLocaleTimeString();
+        logElImage.textContent = `[${time}] ${msg}\n` + logElImage.textContent;
+      }
+
+      function requestLocation() {
+        if (!navigator.geolocation) {
+          locText.textContent = '📍 Not supported';
+          logImage('Geolocation unsupported');
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(
+          pos => {
+            coords = pos.coords;
+            locText.textContent = `📍 ${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)}`;
+            logImage('Location OK');
+          },
+          err => {
+            locText.textContent = '📍 Permission denied';
+            logImage('Location failed: ' + err.message);
+          }
+        );
+      }
+
+      function fileToBase64(file) {
+        return new Promise((res, rej) => {
+          const r = new FileReader();
+          r.onload = () => {
+            const i = r.result.indexOf('base64,');
+            res(i >= 0 ? r.result.slice(i + 7) : r.result);
+          };
+          r.onerror = rej;
+          r.readAsDataURL(file);
+        });
+      }
+
+      async function handleFile(file) {
+        if (!file) return;
+        previewImg.src = URL.createObjectURL(file);
+        previewImg.style.display = 'block';
+        base64 = await fileToBase64(file);
+        logImage('Image loaded ' + Math.round(file.size / 1024) + 'KB');
+        downloadBtn.disabled = false;
+        sendBtn.disabled = false;
+      }
+
+      cameraInput.onchange = e => handleFile(e.target.files?.[0]);
+      fileInput.onchange = e => handleFile(e.target.files?.[0]);
+      clearImage.onclick = () => {
+        previewImg.src = '';
+        base64 = null;
+        downloadBtn.disabled = true;
+        sendBtn.disabled = true;
+        logImage('Image cleared');
+      };
+
+      analyzeButton.onclick = async () => {
+        if (!base64) return showToast('No image');
+        logImage('Analyzing...');
+        try {
+          const r = await fetch(endpointImage, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: base64, analyze: true })
+          });
+          const d = await r.json();
+          if (r.ok) {
+            logImage('Analyzer: ' + (d.message || 'OK'));
+            showToast('Analysis done');
+          } else {
+            showToast('Analysis failed');
+            logImage('Error:' + d.message);
+          }
+        } catch (e) {
+          logImage('Error:' + e.message);
+          showToast('Network error');
+        }
+      };
+
+      submitButton.onclick = async () => {
+        const t = titleEl.value.trim(),
+          desc = descEl.value.trim(),
+          ph = phoneEl.value.trim();
+        if (!t || !desc || !ph || !base64) return showToast('Fill all fields + select image');
+        const payload = {
+          title: t,
+          description: desc,
+          phone: ph,
+          image: base64,
+          location: coords ? `${coords.latitude},${coords.longitude}` : 'unknown'
+        };
+        logImage('Submitting report...');
+        try {
+          const r = await fetch(endpointImage, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const d = await r.json();
+          if (r.ok) {
+            showToast('Report submitted');
+            logImage('Report OK');
+            titleEl.value = '';
+            descEl.value = '';
+            phoneEl.value = '';
+            previewImg.src = '';
+            base64 = null;
+          } else {
+            showToast('Submit failed');
+            logImage('Submit error:' + d.message);
+          }
+        } catch (e) {
+          logImage('Network:' + e.message);
+          showToast('Network error');
+        }
+      };
+
+      downloadBtn.onclick = () => {
+        if (!base64) return showToast('No image');
+        const a = document.createElement('a');
+        a.href = 'data:image/jpeg;base64,' + base64;
+        a.download = 'image.jpg';
+        a.click();
+        logImage('Downloaded');
+      };
+
+      sendBtn.onclick = async () => {
+        if (!base64) return showToast('No image');
+        logImage('Uploading...');
+        try {
+          const r = await fetch(endpointImage, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: base64 })
+          });
+          const d = await r.json();
+          if (r.ok) {
+            showToast('Uploaded');
+            logImage('Upload OK');
+          } else {
+            showToast('Failed');
+            logImage('Upload failed:' + d.message);
+          }
+        } catch (e) {
+          logImage('Error:' + e.message);
+          showToast('Network error');
+        }
+      };
+      clearLogBtnImage.onclick = () => logElImage.textContent = '';
+      logImage('UI ready');
+      requestLocation();
+
+      // --- Live Stream Logic ---
+      const video = document.getElementById('video');
+      const recDot = document.getElementById('recDot');
+      const recLabel = document.getElementById('recLabel');
+      const recordButton = document.getElementById('recordButton');
+      const logElStream = document.getElementById('log-stream');
+      const clipDurationEl = document.getElementById('clipDuration');
+      const hazardBadge = document.getElementById('hazardBadge');
+      const hazardText = document.getElementById('hazardText');
+      const downloadButton = document.getElementById('downloadButton');
+      const sendButtonStream = document.getElementById('sendButton-stream');
+      const muteButton = document.getElementById('muteButton');
+      const switchButton = document.getElementById('switchButton');
+      const clearLogBtnStream = document.getElementById('clearLog-stream');
+      const endpointStream = document.getElementById('endpoint-stream').textContent.trim();
+
+      let stream = null;
+      let recorder = null;
+      let chunks = [];
+      let isRecording = false;
+      let lastBlob = null;
+      let currentFacingMode = 'environment';
+      let clipMs = 3000;
+
+      function logStream(msg) {
+        const time = new Date().toLocaleTimeString();
+        logElStream.textContent = `[${time}] ${msg}\n` + logElStream.textContent;
+      }
+
+      async function startStream() {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: currentFacingMode },
+            audio: false
+          });
+          video.srcObject = stream;
+          document.getElementById('cameraLabel').textContent = currentFacingMode;
+          logStream('Camera started.');
+        } catch (err) {
+          logStream('Camera error: ' + err.message);
+          showToast('Cannot access camera. Check permissions.');
+          throw err;
+        }
+      }
+
+      function getMime() {
+        if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) return 'video/webm;codecs=vp9';
+        if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8')) return 'video/webm;codecs=vp8';
+        if (MediaRecorder.isTypeSupported('video/mp4')) return 'video/mp4';
+        return '';
+      }
+
+      function updateUIRecording() {
+        if (isRecording) {
+          recDot.classList.remove('status-ok');
+          recDot.classList.add('status-dot');
+          recDot.style.background = 'var(--danger)';
+          recLabel.textContent = 'Recording';
+          recordButton.textContent = 'Stop';
+          recordButton.classList.add('btn-danger');
+        } else {
+          recDot.style.background = 'transparent';
+          recLabel.textContent = 'Not recording';
+          recordButton.textContent = 'Start';
+          recordButton.classList.remove('btn-danger');
+        }
+      }
+
+      async function startRecordingLoop() {
+        if (!stream) await startStream();
+
+        const mime = getMime();
+        recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+        chunks = [];
+
+        recorder.ondataavailable = e => {
+          if (e.data && e.data.size) chunks.push(e.data);
+        };
+
+        recorder.onstop = async () => {
+          lastBlob = new Blob(chunks, {
+            type: chunks[0]?.type || 'video/webm'
+          });
+          chunks = [];
+          logStream('Clip recorded (' + Math.round(lastBlob.size / 1024) + 'KB)');
+          downloadButton.disabled = false;
+          sendButtonStream.disabled = false;
+
+          try {
+            const b64 = await blobToBase64(lastBlob);
+            await fetch(endpointStream, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ video: b64 })
+            });
+            logStream('Uploaded clip to server');
+          } catch (err) {
+            logStream('Upload failed: ' + err.message);
+          }
+          if (isRecording) {
+            recorder.start();
+            setTimeout(() => recorder.stop(), clipMs);
+          }
+        };
+
+        recorder.start();
+        setTimeout(() => recorder.stop(), clipMs);
+      }
+
+      function blobToBase64(blob) {
+        return new Promise((res, rej) => {
+          const r = new FileReader();
+          r.onload = () => res(r.result.split(',')[1]);
+          r.onerror = rej;
+          r.readAsDataURL(blob);
+        });
+      }
+
+      recordButton.addEventListener('click', async () => {
+        try {
+          isRecording = !isRecording;
+          updateUIRecording();
+          if (isRecording) {
+            await startRecordingLoop();
+            logStream('Recording loop started.');
+          } else {
+            if (recorder && recorder.state !== 'inactive') recorder.stop();
+            if (stream) {
+              stream.getTracks().forEach(t => t.stop());
+              stream = null;
+              video.srcObject = null;
+            }
+            logStream('Recording stopped.');
+          }
+        } catch (err) {
+          logStream('Start failed: ' + err.message);
+          isRecording = false;
+          updateUIRecording();
+        }
+      });
+
+      downloadButton.addEventListener('click', () => {
+        if (!lastBlob) return showToast('No recorded clip yet');
+        const url = URL.createObjectURL(lastBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'clip.webm';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        logStream('Downloaded last clip');
+      });
+
+      sendButtonStream.addEventListener('click', async () => {
+        if (!lastBlob) return showToast('No recorded clip yet');
+        try {
+          const b64 = await blobToBase64(lastBlob);
+          await fetch(endpointStream, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ video: b64 })
+          });
+          logStream('Manual upload complete');
+          showToast('Uploaded');
+        } catch (err) {
+          logStream('Manual upload failed: ' + err.message);
+          showToast('Upload failed');
+        }
+      });
+
+      muteButton.addEventListener('click', () => {
+        video.muted = !video.muted;
+        muteButton.textContent = video.muted ? 'Unmute' : 'Mute';
+      });
+
+      switchButton.addEventListener('click', async () => {
+        currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+        if (stream) {
+          stream.getTracks().forEach(t => t.stop());
+          stream = null;
+          video.srcObject = null;
+        }
+        await startStream();
+        logStream('Switched camera to ' + currentFacingMode);
+      });
+
+      clearLogBtnStream.addEventListener('click', () => logElStream.textContent = '');
+
+      window.triggerHazard = (text = 'Hazard detected') => {
+        hazardText.textContent = text;
+        hazardBadge.style.display = 'flex';
+        setTimeout(() => hazardBadge.style.display = 'none', 5000);
+      };
+
+      updateUIRecording();
+      clipDurationEl.textContent = (clipMs / 1000) + 's';
+      logStream('UI ready — click Start to allow camera and begin chunked recording.');
+    });
+  </script>
+</body>
+</html>
