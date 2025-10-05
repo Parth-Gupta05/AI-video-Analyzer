@@ -56,5 +56,31 @@ The backend is built with Node.js and Express, acting as a secure intermediary b
 ### Setup Steps
 1. **Clone the repository**
 ```bash
-git clone [repository-url]
-cd [repository-folder]
+git clone [[repository-url](https://github.com/Shreevathsa05/Ai-based-Hazard-Analyzer.git)]
+cd backend
+```
+
+2. **Install dependencies**
+```bash
+npm install
+```
+
+Configure environment variables
+
+Create a .env file in the root directory:
+```
+MONGO_URL="your_mongodb_connection_string"
+GOOGLE_API_KEY="your_gemini_api_key"
+PORT=3000
+```
+
+Run the backend server
+```
+node index.js
+```
+
+Run the frontend
+
+Open index.html in a modern web browser.
+
+The frontend will automatically connect to the backend server.
