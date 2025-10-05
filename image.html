@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Image Analyzer — Report an Issue</title>
+  <style>
+    :root {
+      --bg:#0b0b0d;
+      --panel:#0f1720;
+      --accent:#00d1b2;
+      --danger:#ff4d4f;
+      --muted:#9aa4b2;
+      --glass: rgba(255,255,255,0.03);
+      --radius:14px;
+      --gap:12px;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+
+    html,body {
+      height:100%;margin:0;
+      background:linear-gradient(180deg,#03060a 0%, #07111a 100%);
+      color:#e6eef6;
+    }
+
+    .app { min-height:100%;display:flex;flex-direction:column;gap:16px;align-items:center;justify-content:center;padding:18px; }
+
+    .card {
+      width:min(1180px,98vw);
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      backdrop-filter: blur(6px);
+      border-radius:var(--radius);
+      overflow:hidden;
+      box-shadow:0 8px 30px rgba(0,0,0,0.6);
+      border:1px solid rgba(255,255,255,0.03);
+    }
+
+    .header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--panel)}
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#4dd0ff);display:flex;align-items:center;justify-content:center;font-weight:700;color:#021018}
+    .title{font-weight:600}
+    .subtitle{font-size:12px;color:var(--muted);margin-top:3px}
+
+    .content{display:grid;grid-template-columns:1fr 360px;gap:16px;padding:18px}
+    .visual-wrap{position:relative;background:var(--glass);border-radius:10px;overflow:hidden;min-height:56vh;display:flex;flex-direction:column;align-items:stretch}
+    .preview{width:100%;height:100%;object-fit:cover;background:#000;display:block}
+    .visual-toolbar{position:absolute;left:12px;bottom:12px;display:flex;gap:10px;z-index:5}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:rgba(0,0,0,0.45);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,0.03)}
+
+    .panel{background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);padding:14px;border-radius:10px;min-height:56vh;display:flex;flex-direction:column;gap:12px}
+    .controls{display:flex;gap:10px;flex-wrap:wrap}
+
+    button{appearance:none;border:0;padding:10px 14px;border-radius:10px;font-weight:600;cursor:pointer}
+    .btn-primary{background:var(--accent);color:#021018}
+    .btn-ghost{background:transparent;color:var(--accent);border:1px solid rgba(255,255,255,0.04)}
+    .btn-danger{background:var(--danger);color:#120606}
+    .small{font-size:13px;padding:8px 10px}
+    .info{font-size:13px;color:var(--muted)}
+    .log{flex:1;overflow:auto;padding:8px;background:rgba(255,255,255,0.01);border-radius:8px;border:1px dashed rgba(255,255,255,0.02);font-family:monospace;font-size:13px}
+    .field{display:flex;flex-direction:column;gap:8px}
+    input[type="text"], input[type="tel"], textarea{background:transparent;border:1px solid rgba(255,255,255,0.04);padding:10px;border-radius:8px;color:#e6eef6;font-size:14px}
+    textarea{min-height:100px}
+    .footer{padding:12px 18px;background:rgba(0,0,0,0.04);display:flex;align-items:center;justify-content:space-between}
+    @media (max-width:980px){.content{grid-template-columns:1fr}.panel{min-height:240px}}
+    .toast{position:fixed;right:18px;bottom:18px;padding:12px 16px;border-radius:10px;background:#06121a;color:#e6f7f3;box-shadow:0 8px 30px rgba(0,0,0,0.6)}
+    .hidden{display:none}
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <div class="card">
+      <div class="header">
+        <div class="brand">
+          <div class="logo">IA</div>
+          <div>
+            <div class="title">Image Analyzer</div>
+            <div class="subtitle">Upload image → analyze → report</div>
+          </div>
+        </div>
+        <div class="info">Endpoint: <strong id="endpoint">https://model-forge-idfe.onrender.com/api/report</strong></div>
+      </div>
+
+      <div class="content">
+        <div class="visual-wrap">
+          <img id="previewImg" class="preview" alt="Image preview" />
+          <div class="visual-toolbar">
+            <label class="pill btn-ghost">
+              <input id="cameraInput" type="file" accept="image/*" capture="environment" class="hidden" />
+              📷 Photo
+            </label>
+            <label class="pill btn-ghost">
+              <input id="fileInput" type="file" accept="image/*" class="hidden" />
+              ⬆️ Upload
+            </label>
+            <button id="clearImage" class="pill" style="background:rgba(255,255,255,0.02)">🗑️ Clear</button>
+          </div>
+        </div>
+
+        <aside class="panel">
+          <div class="field">
+            <label class="info">Title*</label>
+            <input id="title" type="text" placeholder="Short title" />
+          </div>
+          <div class="field">
+            <label class="info">Description*</label>
+            <textarea id="desc" placeholder="Describe the issue"></textarea>
+          </div>
+          <div class="field">
+            <label class="info">Phone*</label>
+            <input id="phone" type="tel" placeholder="Contact number" />
+          </div>
+
+          <div style="display:flex;gap:8px;align-items:center;justify-content:space-between">
+            <div class="info" id="locText">📍 Locating...</div>
+            <div style="display:flex;gap:8px">
+              <button id="analyzeButton" class="btn-primary small">Analyze</button>
+              <button id="submitButton" class="btn-primary small">Submit</button>
+            </div>
+          </div>
+
+          <div class="info">Logs</div>
+          <div id="log" class="log">Ready.</div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button id="downloadBtn" class="btn-ghost small">Download</button>
+            <button id="sendBtn" class="btn-ghost small">Send Now</button>
+            <button id="clearLog" class="btn-ghost small">Clear Log</button>
+          </div>
+        </aside>
+      </div>
+
+      <div class="footer">
+        <div class="info">Edge-first upload & reporting.</div>
+        <div class="info">Built to match Live Hazard Detection UI</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script>
+    const endpoint = document.getElementById('endpoint').textContent.trim();
+    const previewImg = document.getElementById('previewImg');
+    const cameraInput = document.getElementById('cameraInput');
+    const fileInput = document.getElementById('fileInput');
+    const clearImage = document.getElementById('clearImage');
+    const titleEl = document.getElementById('title');
+    const descEl = document.getElementById('desc');
+    const phoneEl = document.getElementById('phone');
+    const analyzeButton = document.getElementById('analyzeButton');
+    const submitButton = document.getElementById('submitButton');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const sendBtn = document.getElementById('sendBtn');
+    const logEl = document.getElementById('log');
+    const toastEl = document.getElementById('toast');
+    const locText = document.getElementById('locText');
+    const clearLogBtn = document.getElementById('clearLog');
+
+    let base64 = null;
+    let coords = null;
+
+    function log(msg){ const time=new Date().toLocaleTimeString(); logEl.textContent=`[${time}] ${msg}\n`+logEl.textContent; }
+    function showToast(msg,ms=3000){ toastEl.textContent=msg; toastEl.classList.remove('hidden'); setTimeout(()=>toastEl.classList.add('hidden'),ms); }
+
+    function requestLocation(){
+      if(!navigator.geolocation){ locText.textContent='📍 Not supported'; log('Geolocation unsupported'); return; }
+      navigator.geolocation.getCurrentPosition(
+        pos=>{ coords=pos.coords; locText.textContent=`📍 ${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)}`; log('Location OK'); },
+        err=>{ locText.textContent='📍 Permission denied'; log('Location failed: '+err.message); }
+      );
+    }
+
+    async function requestCameraPermission(){
+      if(!navigator.mediaDevices?.getUserMedia){ log('Camera unsupported'); return; }
+      try{
+        const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+        log('Camera permission granted'); showToast('Camera ready 📷');
+        stream.getTracks().forEach(t=>t.stop());
+      }catch(e){ log('Camera denied: '+e.message); showToast('Camera permission denied'); }
+    }
+
+    function fileToBase64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>{const i=r.result.indexOf('base64,');res(i>=0?r.result.slice(i+7):r.result)};r.onerror=rej;r.readAsDataURL(file);});}
+
+    async function handleFile(file) {
+    if (!file) return;
+    previewImg.src = URL.createObjectURL(file);
+    previewImg.style.display = 'block'; // Make sure the image is visible
+    base64 = await fileToBase64(file);
+    log('Image loaded ' + Math.round(file.size / 1024) + 'KB');
+    downloadBtn.disabled = false;
+    sendBtn.disabled = false;
+  }
+    cameraInput.onchange=e=>handleFile(e.target.files?.[0]);
+    fileInput.onchange=e=>handleFile(e.target.files?.[0]);
+    clearImage.onclick=()=>{previewImg.src='';base64=null;downloadBtn.disabled=true;sendBtn.disabled=true;log('Image cleared');};
+
+    analyzeButton.onclick=async()=>{if(!base64)return showToast('No image');log('Analyzing...');try{const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:base64,analyze:true})});const d=await r.json();if(r.ok){log('Analyzer: '+(d.message||'OK'));showToast('Analysis done');}else{showToast('Analysis failed');log('Error:'+d.message);}}catch(e){log('Error:'+e.message);showToast('Network error');}};
+
+    submitButton.onclick=async()=>{const t=titleEl.value.trim(),desc=descEl.value.trim(),ph=phoneEl.value.trim();if(!t||!desc||!ph||!base64)return showToast('Fill all fields + select image');const payload={title:t,description:desc,phone:ph,image:base64,location:coords?`${coords.latitude},${coords.longitude}`:'unknown'};log('Submitting report...');try{const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const d=await r.json();if(r.ok){showToast('Report submitted');log('Report OK');titleEl.value='';descEl.value='';phoneEl.value='';previewImg.src='';base64=null;}else{showToast('Submit failed');log('Submit error:'+d.message);}}catch(e){log('Network:'+e.message);showToast('Network error');}};
+
+    downloadBtn.onclick=()=>{if(!base64)return showToast('No image');const a=document.createElement('a');a.href='data:image/jpeg;base64,'+base64;a.download='image.jpg';a.click();log('Downloaded');};
+    sendBtn.onclick=async()=>{if(!base64)return showToast('No image');log('Uploading...');try{const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:base64})});const d=await r.json();if(r.ok){showToast('Uploaded');log('Upload OK');}else{showToast('Failed');log('Upload failed:'+d.message);}}catch(e){log('Error:'+e.message);showToast('Network error');}};
+    clearLogBtn.onclick=()=>logEl.textContent='';
+
+    log('UI ready');
+    requestLocation();
+    requestCameraPermission();
+  </script>
+</body>
+</html>
